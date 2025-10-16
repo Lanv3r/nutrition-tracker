@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="row">
+  <h2>Welcome to Nutrition Tracker!</h2>
+    <h3>Please enter your data</h3>
+    <form method="POST" action="/userdata">
+        <label for="fname">First name:</label><br>
+        <input type="text" id="fname" name="fname" required><br>
+        <label for="lname">Last name:</label><br>
+        <input type="text" id="lname" name="lname" required><br>
+        <label for="birthday">Birthday:</label><br>
+        <input type="date" id="birthday" name="birthday" required><br>
+        <label for="sex">Sex:</label><br>
+        <select id="sex" name="sex">
+            <option value="" disabled selected></option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+        </select><br>
+        <label for="condition">Are you in a special condition?</label>
+        <select id="condition" name="condition">
+            <option value="none">None</option>
+            <option value="pregnancy">Pregnancy</option>
+            <option value="breastfeeding">Breastfeeding</option>
+        </select><br>
+        <input type="submit" value="Submit">
+    </form>
+</div>
+
+{% endblock %}
+
+
