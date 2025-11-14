@@ -96,11 +96,14 @@ type Product = {
   nutriments?: Record<string, number>
 }
 
-export default function Dashboard() {
+type DashboardProps = { userId: number }
+
+export default function Dashboard({ userId }: DashboardProps) {
 	const [barcode, setBarcode] = useState("")
   const [error, setError] = useState<string | null>(null)
 	const [product, setProduct] = useState<Product | null>(null)
   const [loading, setLoading] = useState(false)
+	const [servingSizeGrams, setServingSizeGrams] = useState("")
 
 	const handleScan = async () => {
     setLoading(true)
@@ -137,20 +140,34 @@ export default function Dashboard() {
     }
   }
 
+	const addMeal = async () => {
+		if (!product) return
+		const normalized_barcode = barcode.replace(/\s+/g, '')
+		const payload = {
+			userId: userId,
+			barcode: normalized_barcode,
+			servingSizeGrams: Number(servingSizeGrams),
+			productName: product.product_name ?? "Unknown product",
+			nutriments: product.nutriments ?? {},
+		}
+		await fetch("/api/meals", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify(payload),
+		})
+	}
+		
   return (
     <main className="flex min-h-svh flex-col items-center gap-6 bg-slate-50 p-8">
 			<header className="flex w-full max-w-5xl items-center justify-between">
-				<h1 className="text-3xl font-semibold tracking-tight">Nutrition Tracker</h1>
-				<button
-					type="button"
-					className="rounded-full border bg-white/80 p-1 shadow-sm"
-					aria-label="Open profile"
-				>
-					<Avatar>
-						<AvatarImage src="https://github.com/Lanv3r/nutrition-tracker/blob/main/Eatr_raw_logo.png?raw=true" alt="Eatr logo" />
-						<AvatarFallback>Eatr</AvatarFallback>
-					</Avatar>
-				</button>
+				<h1 className="flex items-center gap-3 self-center font-medium">Eatr</h1>
+				<Avatar className="size-10 rounded-lg">
+					<AvatarImage
+						src="https://github.com/Lanv3r/nutrition-tracker/blob/main/Eatr_logo1.png?raw=true"
+						alt="Eatr logo"
+					/>
+					<AvatarFallback>Eatr logo</AvatarFallback>
+				</Avatar>
 			</header>
 			<Input type="text" value={barcode} placeholder="Enter barcode" onChange={(event) => setBarcode(event.target.value)}/>
 			<Button variant="outline" onClick={handleScan} disabled={!barcode || loading}>
@@ -158,8 +175,11 @@ export default function Dashboard() {
 			</Button>
 			{product && !error && (
 				<>
-					<p>Enter Meal Size in g</p>
-					<Input type="number" placeholder="e.g., 150" />
+					<p>Enter Meal Size in g:</p>
+					<Input type="number" value={servingSizeGrams} placeholder="e.g., 150" onChange={(event) => setServingSizeGrams(event.target.value)}/>
+					<Button variant="outline" onClick={addMeal} disabled={!barcode || loading || !servingSizeGrams}>
+						{loading ? "Adding Meal…" : "Add Meal"}
+					</Button>
 					<section className="w-full max-w-3xl rounded-lg border bg-white p-6 shadow-sm">
 						<h2 className="text-xl font-semibold">{product.product_name ?? "Unknown product"}</h2>
 						<ul className="mt-4 grid gap-2">

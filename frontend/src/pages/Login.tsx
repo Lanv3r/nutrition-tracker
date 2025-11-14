@@ -22,7 +22,7 @@ import {
 import { Input } from "@/components/ui/input"
 
 type LoginProps = {
-  onSuccess: () => void
+  onSuccess: (userId: number) => void
   onGoToSignup: () => void
 }
 
@@ -49,8 +49,8 @@ export default function Login({ onSuccess, onGoToSignup }: LoginProps) {
         const { error } = await response.json()
         throw new Error(error ?? "Invalid credentials")
       }
-
-      onSuccess()
+      const { userId } = await response.json()
+      onSuccess(userId)
     } catch (err) {
       const message = err instanceof Error ? err.message : "Something went wrong"
       setError(message)

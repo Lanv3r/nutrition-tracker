@@ -1,4 +1,5 @@
 from flask import Flask, request, redirect, url_for, render_template, jsonify
+import json
 import sqlite3
 
 app = Flask(__name__)
@@ -6,9 +7,25 @@ app = Flask(__name__)
 def default_page():
     return render_template('login.html')
 
-@app.route('/profile')
-def profile():
+@app.route('/api/profile')
+def api_profile():
     return render_template('index.html')
+
+@app.post("/api/meals")
+def api_meals():
+    payload = request.get_json()
+    userId = payload.get("userId")
+    barcode = payload.get("barcode")
+    servingSizeGrams = payload.get("servingSizeGrams")
+    productName = payload.get("productName")
+    nutriments = payload.get("nutriments")
+    nutriments_json = json.dumps(nutriments or {})
+    # Store meal in a database
+    conn = sqlite3.connect('meals.db')
+    c = conn.cursor()
+    c.execute('INSERT INTO meals (user_id, barcode, serving_size_grams, product_name, nutriments) VALUES (?, ?, ?, ?, ?)', (userId, barcode, servingSizeGrams, productName, nutriments_json))
+    conn.commit()
+    conn.close()
 
 @app.post("/api/login")
 def api_login():
@@ -76,7 +93,7 @@ def init_users_db():
     c.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            username INTEGER NOT NULL,
+            username TEXT NOT NULL,
             password TEXT NOT NULL,
             birthday TEXT NOT NULL,
             sex TEXT NOT NULL
@@ -85,6 +102,24 @@ def init_users_db():
     conn.commit()
     conn.close()
 
+def init_meals_db():
+    conn = sqlite3.connect('meals.db')
+    c = conn.cursor()
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS meals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            barcode TEXT NOT NULL,
+            serving_size_grams REAL NOT NULL,
+            product_name TEXT NOT NULL,
+            nutriments TEXT NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users (id)
+        )
+    ''')
+    conn.commit()
+    conn.close()
+
+init_meals_db()
 init_users_db()
 
 if __name__ == '__main__':
