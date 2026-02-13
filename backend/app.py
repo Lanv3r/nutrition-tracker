@@ -11,10 +11,10 @@ app.config.update(
     SECRET_KEY="615f67ca5569578e1b85ab64f4d14c38",
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax", 
-    SESSION_COOKIE_SECURE=False,   
+    SESSION_COOKIE_SECURE=True,   
     WTF_CSRF_TIME_LIMIT=None,
 )
- #csrf = CSRFProtect(app)
+csrf = CSRFProtect(app)
 
 @app.get("/api/health")
 def api_health():
@@ -285,13 +285,15 @@ def seed_demo_meals(user_id: int):
 
 @app.get("/api/csrf-token")
 def get_csrf_token():
+    print("csrf token")
     token = generate_csrf()
     resp = jsonify({"csrfToken": token})
-    resp.set_cookie("csrf_token", token, httponly=False, samesite="Lax", secure=False)
+    resp.set_cookie("csrf_token", token, httponly=True, samesite="Lax", secure=True)
     return resp
 
 @app.get("/api/me")
 def api_me():
+    print("me")
     user_id = session.get("user_id")
     username = session.get("username")
     if not user_id:
