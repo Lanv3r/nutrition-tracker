@@ -1,7 +1,16 @@
-import { useState } from 'react'
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-
+import { useEffect, useRef, useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2Icon } from "lucide-react";
+import { Alert, AlertTitle } from "@/components/ui/alert";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import BarcodeScanner from "react-qr-barcode-scanner";
 type NutrimentKey =
   | "energy-kcal_100g"
   | "proteins_100g"
@@ -41,9 +50,9 @@ type NutrimentKey =
   | "omega-6-fat_100g"
   | "caffeine_100g"
   | "taurine_100g"
-  | "alcohol_100g"
+  | "alcohol_100g";
 
-	const DISPLAY_NUTRIENTS: { key: NutrimentKey; label: string }[] = [
+const DISPLAY_NUTRIENTS: { key: NutrimentKey; label: string }[] = [
   { key: "energy-kcal_100g", label: "Calories (kcal / 100g)" },
   { key: "proteins_100g", label: "Protein (g / 100g)" },
   { key: "fat_100g", label: "Fat (g / 100g)" },
@@ -65,7 +74,10 @@ type NutrimentKey =
   { key: "vitamin-b9_100g", label: "Vitamin B9 (Folate) (µg / 100g)" },
   { key: "vitamin-b12_100g", label: "Vitamin B12 (µg / 100g)" },
   { key: "biotin_100g", label: "Biotin (Vitamin B8) (µg / 100g)" },
-  { key: "pantothenic-acid_100g", label: "Pantothenic Acid (Vitamin B5) (mg / 100g)" },
+  {
+    key: "pantothenic-acid_100g",
+    label: "Pantothenic Acid (Vitamin B5) (mg / 100g)",
+  },
   { key: "calcium_100g", label: "Calcium (mg / 100g)" },
   { key: "iron_100g", label: "Iron (mg / 100g)" },
   { key: "magnesium_100g", label: "Magnesium (mg / 100g)" },
@@ -83,106 +95,281 @@ type NutrimentKey =
   { key: "caffeine_100g", label: "Caffeine (mg / 100g)" },
   { key: "taurine_100g", label: "Taurine (mg / 100g)" },
   { key: "alcohol_100g", label: "Alcohol (% vol / 100g)" },
-]
+];
 
 type Product = {
-  product_name?: string
-  brands?: string
-  nutriments?: Record<string, number>
-}
+  product_name?: string;
+  brands?: string;
+  nutriments?: Record<string, number>;
+};
 
-type AddMealProps = { userId: number }
+type AddMealProps = { userId: number };
 
 export default function AddMeal({ userId }: AddMealProps) {
-	const [barcode, setBarcode] = useState("")
-  const [error, setError] = useState<string | null>(null)
-	const [product, setProduct] = useState<Product | null>(null)
-  const [loading, setLoading] = useState(false)
-	const [servingSizeGrams, setServingSizeGrams] = useState("")
+  const [barcode, setBarcode] = useState("");
+  const [success, setSuccess] = useState<boolean>(false);
+  const [fadeSuccess, setFadeSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [servingSizeGrams, setServingSizeGrams] = useState("");
+  const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
+  const cardRef = useRef<HTMLDivElement | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(true);
 
-	const handleScan = async () => {
-    setLoading(true)
-    setError(null)
+  // auto-hide success after a short delay
+  useEffect(() => {
+    if (!success) return;
+    setFadeSuccess(false);
+    const fadeTimer = window.setTimeout(() => setFadeSuccess(true), 1000);
+    const hideTimer = window.setTimeout(() => {
+      setSuccess(false);
+      setFadeSuccess(false); // reset so next alert shows fully opaque
+    }, 3000);
+    return () => {
+      window.clearTimeout(fadeTimer);
+      window.clearTimeout(hideTimer);
+    };
+  }, [success]);
 
-		if (!barcode) {
-			setError("Please enter a barcode.")
-			setLoading(false)
-			return
-		}
+  const handleScan = async () => {
+    setLoading(true);
+    setError(null);
 
-		const normalized_barcode = barcode.replace(/\s+/g, '')
-		if (/^\d+$/.test(normalized_barcode) === false) {
-			setError("Barcode must contain only digits.")
-			setLoading(false)
-			return
-		}
-    try {
-      const response = await fetch(`https://world.openfoodfacts.org/api/v2/product/${normalized_barcode}.json`, {
-        method: "GET",
-        headers: {'User-Agent': 'NutritionTracker Web - 1.0.0 - https://yourdomain.com - scan', 'Accept': 'application/json'}
-      })
-			const data = await response.json()
-      if (!data.status || data.status !== 1) {
-				setProduct(null)
-        throw new Error(data.status_verbose ?? "Invalid credentials")
-      }
-			setProduct(data.product ?? null)
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Something went wrong"
-      setError(message)
-    } finally {
-      setLoading(false)
+    if (!barcode) {
+      setError("Please enter a barcode.");
+      setLoading(false);
+      return;
     }
-  }
 
-	const addMeal = async () => {
-		if (!product) return
-		const normalized_barcode = barcode.replace(/\s+/g, '')
-		const payload = {
-			userId: userId,
-			barcode: normalized_barcode,
-			servingSizeGrams: Number(servingSizeGrams),
-			productName: product.product_name ?? "Unknown product",
-			nutriments: product.nutriments ?? {},
-		}
-		await fetch("/api/meals", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(payload),
-		})
-	}
-		
+    const normalized_barcode = barcode.replace(/\s+/g, "");
+    if (/^\d+$/.test(normalized_barcode) === false) {
+      setError("Barcode must contain only digits.");
+      setLoading(false);
+      return;
+    }
+    try {
+      const response = await fetch(
+        `https://world.openfoodfacts.org/api/v2/product/${normalized_barcode}.json`,
+        {
+          method: "GET",
+          headers: {
+            "User-Agent":
+              "NutritionTracker Web - 1.0.0 - https://yourdomain.com - scan",
+            Accept: "application/json",
+          },
+        },
+      );
+      const data = await response.json();
+      if (!data.status || data.status !== 1) {
+        setProduct(null);
+        throw new Error(data.status_verbose ?? "Invalid credentials");
+      }
+      setProduct(data.product ?? null);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addMeal = async () => {
+    if (!product) return;
+    const normalized_barcode = barcode.replace(/\s+/g, "");
+    const payload = {
+      userId: userId,
+      barcode: normalized_barcode,
+      servingSizeGrams: Number(servingSizeGrams),
+      productName: product.product_name ?? "Unknown product",
+      nutriments: product.nutriments ?? {},
+    };
+    try {
+      const response = await fetch("/api/meals", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!response.ok) {
+        const { error } = await response.json();
+        throw new Error(error ?? "Unknown error");
+      }
+      setSuccess(true);
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "Something went wrong";
+      setError(message);
+    }
+  };
+
+  const toggleScanner = () => {
+    setScannerOpen(!scannerOpen);
+    setBarcode("");
+    setProduct(null);
+  };
+
+  // Calculate card height
+  useEffect(() => {
+    const updateHeight = () => {
+      const width = cardRef.current?.offsetWidth;
+      if (!width) return;
+      setCardHeight((width - 18) * 0.75 + 86);
+    };
+    updateHeight();
+    window.addEventListener("resize", updateHeight);
+    return () => window.removeEventListener("resize", updateHeight);
+  }, []);
+
   return (
     <main className="flex min-h-svh flex-col items-center gap-6 bg-slate-50 p-8">
-			<Input type="text" value={barcode} placeholder="Enter barcode" onChange={(event) => setBarcode(event.target.value)}/>
-			<Button variant="outline" onClick={handleScan} disabled={!barcode || loading}>
-				{loading ? "Fetching data…" : "Fetch Nutrition Data"}
-			</Button>
-			{product && !error && (
-				<>
-					<p>Enter Meal Size in g:</p>
-					<Input type="number" value={servingSizeGrams} placeholder="e.g., 150" onChange={(event) => setServingSizeGrams(event.target.value)}/>
-					<Button variant="outline" onClick={addMeal} disabled={!barcode || loading || !servingSizeGrams}>
-						{loading ? "Adding Meal…" : "Add Meal"}
-					</Button>
-					<section className="w-full max-w-3xl rounded-lg border bg-white p-6 shadow-sm">
-						<h2 className="text-xl font-semibold">{product.product_name ?? "Unknown product"}</h2>
-						<ul className="mt-4 grid gap-2">
-							{DISPLAY_NUTRIENTS.map(({ key, label }) => {
-								const value = product.nutriments?.[key] ?? 0
-								return (
-									<li key={key} className="flex items-center justify-between">
-										<span>{label}</span>
-										<span>{value}</span>
-									</li>
-								)
-							})}
-						</ul>
-					</section>
-				</>
-				
-			)}
-			{error && <p className="text-red-600">{error}</p>}
+      <Card
+        ref={cardRef}
+        className="flex w-full max-w-xl flex-col gap-0 py-2"
+        style={cardHeight ? { height: `${cardHeight}px` } : undefined}
+      >
+        <CardHeader className="flex items-center justify-center">
+          <CardTitle>Barcode Scanner</CardTitle>
+        </CardHeader>
+        {scannerOpen && !product && (
+          <div id="card-wrap" className="flex flex-col items-center">
+            <CardContent className="flex flex-col items-center justify-center px-2 py-2">
+              <div
+                id="scanner-wrap"
+                className="w-full"
+                style={
+                  cardHeight ? { height: `${cardHeight - 86}px` } : undefined
+                }
+              >
+                <BarcodeScanner
+                  width={360}
+                  height={360}
+                  onUpdate={(_err, result) => {
+                    if (result) {
+                      setBarcode(result.getText());
+                      handleScan();
+                    } else setBarcode("Not Found");
+                  }}
+                />
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" onClick={() => toggleScanner()}>
+                Enter Barcode Manually
+              </Button>
+            </CardFooter>
+          </div>
+        )}
+        {!scannerOpen && !product && (
+          <div id="card-wrap" className="flex flex-col items-center">
+            <CardContent
+              className="flex flex-col items-center justify-center px-2 py-2"
+              style={
+                cardHeight ? { height: `${cardHeight - 70}px` } : undefined
+              }
+            >
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleScan();
+                }}
+                className="flex flex-col gap-1"
+              >
+                <Input
+                  id="barcode-input"
+                  type="text"
+                  value={barcode}
+                  placeholder="Enter barcode"
+                  onChange={(event) => setBarcode(event.target.value)}
+                />
+                <Button
+                  variant="outline"
+                  type="submit"
+                  disabled={!barcode || loading}
+                >
+                  {loading ? "Fetching data…" : "Fetch Data"}
+                </Button>
+              </form>
+            </CardContent>
+            <CardFooter>
+              <Button variant="outline" onClick={() => toggleScanner()}>
+                Scan Barcode
+              </Button>
+            </CardFooter>
+          </div>
+        )}
+        {product && !error && (
+          <CardContent className="flex max-h-[500px] flex-col items-center gap-4 overflow-y-auto">
+            {success && (
+              <Alert
+                className={`background-green-50 border-green-500 text-green-700 transition-opacity duration-2000 ${fadeSuccess ? "opacity-0" : "opacity-100"}`}
+              >
+                <CheckCircle2Icon />
+                <AlertTitle>Success! Your changes have been saved</AlertTitle>
+              </Alert>
+            )}
+            <p>Enter Meal Size in g:</p>
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                addMeal();
+                setProduct(null);
+                setBarcode("");
+                setServingSizeGrams("");
+              }}
+              className="flex flex-col gap-1"
+            >
+              <Input
+                id="serving-size-input"
+                type="number"
+                value={servingSizeGrams}
+                placeholder="e.g., 150"
+                onChange={(event) => setServingSizeGrams(event.target.value)}
+              />
+              <div className="flex flex-row gap-6">
+                <Button
+                  type="button"
+                  variant="destructive"
+                  className="bg-destructive/85 hover:bg-destructive"
+                  onClick={() => {
+                    setProduct(null);
+                    setBarcode("");
+                    setServingSizeGrams("");
+                  }}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  variant="outline"
+                  type="submit"
+                  disabled={!barcode || loading || !servingSizeGrams}
+                >
+                  {loading ? "Adding Meal…" : "Add Meal"}
+                </Button>
+              </div>
+            </form>
+
+            <section className="w-full max-w-3xl rounded-lg border bg-white p-6 shadow-sm">
+              <h2 className="text-xl font-semibold">
+                {product.product_name ?? "Unknown product"}
+              </h2>
+              <ul className="mt-4 grid gap-2">
+                {DISPLAY_NUTRIENTS.map(({ key, label }) => {
+                  const value = product.nutriments?.[key] ?? 0;
+                  return (
+                    <li key={key} className="flex items-center justify-between">
+                      <span>{label}</span>
+                      <span>{value}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          </CardContent>
+        )}
+      </Card>
+
+      {error && <p className="text-red-600">{error}</p>}
     </main>
-  )
+  );
 }

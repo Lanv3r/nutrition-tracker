@@ -1,6 +1,4 @@
-import { IconCirclePlusFilled, IconMail, type Icon } from "@tabler/icons-react"
-
-import { Button } from "@/components/ui/button"
+import { type Icon } from "@tabler/icons-react"
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -16,11 +14,11 @@ export function NavMain({
 }: {
   items: {
     title: string
-    id: "dashboard" | "add-meal" | "profile"
+    id: "dashboard" | "add-meal" | "profile" | "diet-overview"
     icon?: Icon
   }[]
-  active: "dashboard" | "add-meal" | "profile"
-  onSelect: (tab: "dashboard" | "add-meal" | "profile") => void
+  active: "dashboard" | "add-meal" | "profile" | "diet-overview"
+  onSelect: (tab: "dashboard" | "add-meal" | "profile" | "diet-overview") => void
 }) {
   return (
     <SidebarGroup>

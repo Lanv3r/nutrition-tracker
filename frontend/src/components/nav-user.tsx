@@ -1,8 +1,6 @@
 import {
-  IconCreditCard,
   IconDotsVertical,
   IconLogout,
-  IconNotification,
   IconUserCircle,
 } from "@tabler/icons-react"
 
@@ -27,15 +25,16 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
-export function NavUser({
-  user,
-}: {
+type NavUserProps = {
   user: {
     name: string
-    email: string
     avatar: string
   }
-}) {
+  onProfileClick?: () => void
+  onLogOutClick?: () => void
+}
+
+export function NavUser({ user, onProfileClick, onLogOutClick }: NavUserProps) {
   const { isMobile } = useSidebar()
 
   return (
@@ -53,9 +52,6 @@ export function NavUser({
               </Avatar>
               <div className="grid flex-1 text-left text-sm leading-tight">
                 <span className="truncate font-medium">{user.name}</span>
-                <span className="text-muted-foreground truncate text-xs">
-                  {user.email}
-                </span>
               </div>
               <IconDotsVertical className="ml-auto size-4" />
             </SidebarMenuButton>
@@ -74,29 +70,26 @@ export function NavUser({
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-medium">{user.name}</span>
-                  <span className="text-muted-foreground truncate text-xs">
-                    {user.email}
-                  </span>
                 </div>
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                onSelect={() => {
+                  onProfileClick?.()
+                }}
+              >
                 <IconUserCircle />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconCreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconNotification />
-                Notifications
+                Profile
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              onSelect={() => {
+                onLogOutClick?.()
+              }}
+            >
               <IconLogout />
               Log out
             </DropdownMenuItem>

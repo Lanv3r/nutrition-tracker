@@ -1,27 +1,14 @@
 import * as React from "react"
 import type { Icon } from "@tabler/icons-react"
 import {
-  IconCamera,
   IconChartBar,
   IconDashboard,
-  IconDatabase,
-  IconFileAi,
-  IconFileDescription,
-  IconFileWord,
-  IconFolder,
-  IconHelp,
-  IconInnerShadowTop,
   IconListDetails,
-  IconReport,
-  IconSearch,
-  IconSettings,
   IconUsers,
 } from "@tabler/icons-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-import { NavDocuments } from "@/components/nav-documents"
 import { NavMain } from "@/components/nav-main"
-import { NavSecondary } from "@/components/nav-secondary"
 import { NavUser } from "@/components/nav-user"
 import {
   Sidebar,
@@ -31,129 +18,37 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  useSidebar,
 } from "@/components/ui/sidebar"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    {
-      title: "Dashboard",
-      id: "dashboard",
-      icon: IconDashboard,
-    },
-    {
-      title: "Add Meal",
-      id: "add-meal",
-      icon: IconListDetails,
-    },
-    {
-      title: "Profile",
-      id: "profile",
-      icon: IconUsers,
-    },
-  ],
-  navClouds: [
-    {
-      title: "Capture",
-      icon: IconCamera,
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      icon: IconFileDescription,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      icon: IconFileAi,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-      icon: IconSettings,
-    },
-    {
-      title: "Get Help",
-      url: "#",
-      icon: IconHelp,
-    },
-    {
-      title: "Search",
-      url: "#",
-      icon: IconSearch,
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-      icon: IconDatabase,
-    },
-    {
-      name: "Reports",
-      url: "#",
-      icon: IconReport,
-    },
-    {
-      name: "Word Assistant",
-      url: "#",
-      icon: IconFileWord,
-    },
-  ],
-}
-
-type TabId = "dashboard" | "add-meal" | "profile";
+type TabId = "dashboard" | "add-meal" | "diet-overview" | "profile"
 
 type AppSidebarProps = {
-  activeTab: TabId;
-  onSelect: (tab: TabId) => void;
-} & React.ComponentProps<typeof Sidebar>;
+  activeTab: TabId
+  onSelect: (tab: TabId) => void
+  username: string
+  onLogOutClick?: () => void
+} & Omit<React.ComponentProps<typeof Sidebar>, "onSelect">
 
 const navMain: { id: TabId; title: string; icon?: Icon }[] = [
   { id: "dashboard", title: "Dashboard", icon: IconDashboard },
   { id: "add-meal", title: "Add Meal", icon: IconListDetails },
+  { id: "diet-overview", title: "Diet Overview", icon: IconChartBar },
   { id: "profile", title: "Profile", icon: IconUsers },
 ];
 
-export function AppSidebar({ activeTab, onSelect, ...sidebarProps }: AppSidebarProps) {
+export function AppSidebar({ activeTab, onSelect, username, onLogOutClick, ...sidebarProps }: AppSidebarProps) {
+  const { isMobile, setOpenMobile } = useSidebar()
+  const userData = {
+    name: username,
+    avatar: "https://avatars.githubusercontent.com/u/64646822?v=4",
+  }
+
+  const handleSelect = (tab: TabId) => {
+    onSelect(tab)
+    if (isMobile) setOpenMobile(false)
+  }
+
   return (
     <Sidebar collapsible="offcanvas" {...sidebarProps}>
       <SidebarHeader>
@@ -161,7 +56,7 @@ export function AppSidebar({ activeTab, onSelect, ...sidebarProps }: AppSidebarP
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:!p-1.5"
+              className="data-[slot=sidebar-menu-button]:p-1.5!"
             >
               <a href="#">
                 <Avatar className="size-5 rounded-lg">
@@ -178,12 +73,14 @@ export function AppSidebar({ activeTab, onSelect, ...sidebarProps }: AppSidebarP
         </SidebarMenu>
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={navMain} active={activeTab} onSelect={onSelect}/>
-        <NavDocuments items={data.documents} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain items={navMain} active={activeTab} onSelect={handleSelect}/>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser
+          user={userData}
+          onProfileClick={() => handleSelect("profile")}
+          onLogOutClick={onLogOutClick}
+        />
       </SidebarFooter>
     </Sidebar>
   )
