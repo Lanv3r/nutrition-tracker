@@ -323,7 +323,9 @@ export default function DietOverview({ userId }: DietOverviewProps) {
       Math.round(goal),
       Math.round(goal * 1.25),
     ];
-    return Array.from(new Set(raw)).filter((t) => Number.isFinite(t)).sort((a, b) => a - b);
+    return Array.from(new Set(raw))
+      .filter((t) => Number.isFinite(t))
+      .sort((a, b) => a - b);
   }, [goal]);
 
   return (
