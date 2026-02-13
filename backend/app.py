@@ -16,6 +16,12 @@ app.config.update(
 )
  #csrf = CSRFProtect(app)
 
+@app.get("/api/health")
+def api_health():
+    print("Health check OK")
+    return jsonify({"status": "ok"})
+
+
 DEMO_USERNAME = "__demo__"
 DEMO_DISPLAY_NAME = "Demo"
 DEMO_GOAL = 2200
