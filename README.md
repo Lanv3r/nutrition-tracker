@@ -1,6 +1,9 @@
 # Eatr - Nutrition Tracker
 
-Eatr is a full-stack nutrition tracker for logging meals, calculating macros, and visualizing intake trends with charts. It includes a passwordless demo mode with seeded recent data so the UI is immediately explorable.
+Eatr is a full-stack nutrition tracker for logging meals, calculating macros, and visualizing intake trends with charts. It includes a passwordless demo mode with seeded recent data, so the UI is immediately explorable.
+<img src="frontend/public/images/bar_graph.png" width="500"/>
+<img src="frontend/public/images/pie_chart.png" width="500"/>
+<img src="frontend/public/images/product_table.png" width="500"/>
 
 ## Features
 
