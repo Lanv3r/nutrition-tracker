@@ -14,7 +14,7 @@ app.config.update(
     SESSION_COOKIE_SECURE=False,   
     WTF_CSRF_TIME_LIMIT=None,
 )
-csrf = CSRFProtect(app)
+ #csrf = CSRFProtect(app)
 
 DEMO_USERNAME = "__demo__"
 DEMO_DISPLAY_NAME = "Demo"
