@@ -1,9 +1,21 @@
 # Eatr - Nutrition Tracker
 
 Eatr is a full-stack nutrition tracker for logging meals, calculating macros, and visualizing intake trends with charts. It includes a passwordless demo mode with seeded recent data, so the UI is immediately explorable.
+
+📋 Food Log Table
+Browse every food item you’ve logged in one place.
+Quickly sort, edit, or delete entries to keep your nutrition data accurate and up to date.
+<img src="frontend/public/images/product_table.png" width="750"/>
+
+📊 Weekly Calorie Progress
+A clear bar chart shows how your daily intake compares to your calorie goals across the week, helping you spot trends and stay consistent.
 <img src="frontend/public/images/bar_graph.png" width="500"/>
-<img src="frontend/public/images/pie_chart.png" width="500"/>
-<img src="frontend/public/images/product_table.png" width="500"/>
+
+🥧 Macro Distribution
+Interactive pie charts visualize how your calories are split between protein, carbs, and fats, making it easy to balance your diet at a glance.
+<img src="frontend/public/images/pie_chart.png" width="350"/>
+
+
 
 ## Features
 
