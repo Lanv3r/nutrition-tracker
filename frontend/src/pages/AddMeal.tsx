@@ -225,7 +225,7 @@ export default function AddMeal({ userId }: AddMealProps) {
       const width = cardRef.current?.offsetWidth;
       if (!width) return;
       if (isPortraitCamera) {
-        setCardHeight(700);
+        setCardHeight(1200);
       } else {
         setCardHeight((width - 18) * 0.75 + 86);
       }
