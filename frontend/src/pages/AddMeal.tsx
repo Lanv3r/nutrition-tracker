@@ -11,7 +11,6 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { BrowserMultiFormatReader } from "@zxing/library";
-import { is } from "date-fns/locale";
 type NutrimentKey =
   | "energy-kcal_100g"
   | "proteins_100g"
@@ -219,21 +218,25 @@ export default function AddMeal({ userId }: AddMealProps) {
     lastScannedCodeRef.current = "";
   };
 
-  // Calculate card height
+  // Calculate card height from current scanner aspect ratio.
   useEffect(() => {
     const updateHeight = () => {
       const width = cardRef.current?.offsetWidth;
       if (!width) return;
-      if (isPortraitCamera) {
-        setCardHeight(1200);
-      } else {
-        setCardHeight((width - 18) * 0.75 + 86);
-      }
+
+      const scannerWidth = width - 18;
+      const scannerHeight = scannerWidth / scannerAspect;
+      const nextCardHeight = scannerHeight + 86;
+
+      // Prevent overflow on short mobile viewports.
+      const viewportCap = window.innerHeight - 48;
+      setCardHeight(Math.min(nextCardHeight, viewportCap));
     };
+
     updateHeight();
     window.addEventListener("resize", updateHeight);
     return () => window.removeEventListener("resize", updateHeight);
-  }, []);
+  }, [scannerAspect]);
 
   useEffect(() => {
     if (!scannerOpen || product) return;
