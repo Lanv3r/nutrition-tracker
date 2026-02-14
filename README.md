@@ -1,5 +1,7 @@
 # Eatr - Nutrition Tracker
-Try it - rafis.us
+
+[Try it!](https://rafis.us)
+
 Eatr is a full-stack nutrition tracker for logging meals, calculating macros, and visualizing intake trends with charts. It includes a passwordless demo mode with seeded recent data, so the UI is immediately explorable.
 
 📋 Food Log Table
