@@ -11,6 +11,7 @@ import {
   CardFooter,
 } from "@/components/ui/card";
 import { BrowserMultiFormatReader } from "@zxing/library";
+import { is } from "date-fns/locale";
 type NutrimentKey =
   | "energy-kcal_100g"
   | "proteins_100g"
@@ -223,7 +224,11 @@ export default function AddMeal({ userId }: AddMealProps) {
     const updateHeight = () => {
       const width = cardRef.current?.offsetWidth;
       if (!width) return;
-      setCardHeight((width - 18) * 0.75 + 86);
+      if (isPortraitCamera) {
+        setCardHeight(700);
+      } else {
+        setCardHeight((width - 18) * 0.75 + 86);
+      }
     };
     updateHeight();
     window.addEventListener("resize", updateHeight);
@@ -248,29 +253,53 @@ export default function AddMeal({ userId }: AddMealProps) {
       );
     };
 
-    const startScanner = async () => {
-      try {
-        await codeReader.decodeFromConstraints(
-          {
-            video: {
-              facingMode: { ideal: "environment" },
-            },
-          },
-          video,
-          (result) => {
-            if (isStopped || !result) return;
-            const nextCode = result.getText().trim();
-            if (!nextCode || nextCode === lastScannedCodeRef.current) return;
+    const onDecode = (result: { getText: () => string } | undefined) => {
+      if (isStopped || !result) return;
+      const nextCode = result.getText().trim();
+      if (!nextCode || nextCode === lastScannedCodeRef.current) return;
 
-            lastScannedCodeRef.current = nextCode;
-            setBarcode(nextCode);
-            void fetchProductForBarcode(nextCode);
+      lastScannedCodeRef.current = nextCode;
+      setBarcode(nextCode);
+      void fetchProductForBarcode(nextCode);
+    };
+
+    const startScanner = async () => {
+      if (!window.isSecureContext) {
+        setError("Camera requires HTTPS on mobile browsers.");
+        return;
+      }
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setError("This browser does not support camera access.");
+        return;
+      }
+
+      const constraintsList: MediaStreamConstraints[] = [
+        {
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
           },
-        );
-      } catch (_err) {
-        if (!isStopped) {
-          setError("Unable to access camera for scanning.");
+        },
+        { video: { facingMode: "environment" } },
+        { video: true },
+      ];
+
+      let started = false;
+      for (const constraints of constraintsList) {
+        try {
+          await codeReader.decodeFromConstraints(constraints, video, onDecode);
+          started = true;
+          break;
+        } catch (_err) {
+          // Try the next constraint profile.
         }
+      }
+
+      if (!started && !isStopped) {
+        setError(
+          "Unable to access camera. Check camera permission in browser settings.",
+        );
       }
     };
 
