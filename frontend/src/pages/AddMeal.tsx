@@ -10,7 +10,7 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import BarcodeScanner from "react-qr-barcode-scanner";
+import { BrowserMultiFormatReader } from "@zxing/library";
 type NutrimentKey =
   | "energy-kcal_100g"
   | "proteins_100g"
@@ -116,7 +116,8 @@ export default function AddMeal({ userId }: AddMealProps) {
   const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
   const [isPortraitCamera, setIsPortraitCamera] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
-  const scannerWrapRef = useRef<HTMLDivElement | null>(null);
+  const scannerVideoRef = useRef<HTMLVideoElement | null>(null);
+  const lastScannedCodeRef = useRef("");
   const [scannerOpen, setScannerOpen] = useState(true);
 
   // auto-hide success after a short delay
@@ -134,17 +135,17 @@ export default function AddMeal({ userId }: AddMealProps) {
     };
   }, [success]);
 
-  const handleScan = async () => {
+  const fetchProductForBarcode = async (rawBarcode: string) => {
     setLoading(true);
     setError(null);
 
-    if (!barcode) {
+    if (!rawBarcode) {
       setError("Please enter a barcode.");
       setLoading(false);
       return;
     }
 
-    const normalized_barcode = barcode.replace(/\s+/g, "");
+    const normalized_barcode = rawBarcode.replace(/\s+/g, "");
     if (/^\d+$/.test(normalized_barcode) === false) {
       setError("Barcode must contain only digits.");
       setLoading(false);
@@ -175,6 +176,10 @@ export default function AddMeal({ userId }: AddMealProps) {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleScan = async () => {
+    await fetchProductForBarcode(barcode);
   };
 
   const addMeal = async () => {
@@ -209,6 +214,7 @@ export default function AddMeal({ userId }: AddMealProps) {
     setScannerOpen(!scannerOpen);
     setBarcode("");
     setProduct(null);
+    lastScannedCodeRef.current = "";
   };
 
   // Calculate card height
@@ -223,23 +229,58 @@ export default function AddMeal({ userId }: AddMealProps) {
     return () => window.removeEventListener("resize", updateHeight);
   }, []);
 
-  // Detect camera orientation from video metadata and adapt scanner aspect ratio.
   useEffect(() => {
     if (!scannerOpen || product) return;
 
-    const interval = window.setInterval(() => {
-      const video = scannerWrapRef.current?.querySelector(
-        "video",
-      ) as HTMLVideoElement | null;
-      if (!video || !video.videoWidth || !video.videoHeight) return;
+    const video = scannerVideoRef.current;
+    if (!video) return;
+
+    const codeReader = new BrowserMultiFormatReader();
+    let isStopped = false;
+
+    const updateOrientation = () => {
+      if (!video.videoWidth || !video.videoHeight) return;
 
       const nextIsPortrait = video.videoHeight > video.videoWidth;
       setIsPortraitCamera((prev) =>
         prev === nextIsPortrait ? prev : nextIsPortrait,
       );
-    }, 300);
+    };
 
-    return () => window.clearInterval(interval);
+    const startScanner = async () => {
+      try {
+        await codeReader.decodeFromConstraints(
+          {
+            video: {
+              facingMode: { ideal: "environment" },
+            },
+          },
+          video,
+          (result) => {
+            if (isStopped || !result) return;
+            const nextCode = result.getText().trim();
+            if (!nextCode || nextCode === lastScannedCodeRef.current) return;
+
+            lastScannedCodeRef.current = nextCode;
+            setBarcode(nextCode);
+            void fetchProductForBarcode(nextCode);
+          },
+        );
+      } catch (_err) {
+        if (!isStopped) {
+          setError("Unable to access camera for scanning.");
+        }
+      }
+    };
+
+    video.addEventListener("loadedmetadata", updateOrientation);
+    void startScanner();
+
+    return () => {
+      isStopped = true;
+      video.removeEventListener("loadedmetadata", updateOrientation);
+      codeReader.reset();
+    };
   }, [scannerOpen, product]);
 
   return (
@@ -257,7 +298,6 @@ export default function AddMeal({ userId }: AddMealProps) {
             <CardContent className="flex flex-col items-center justify-center px-2 py-2">
               <div
                 id="scanner-wrap"
-                ref={scannerWrapRef}
                 className="mx-auto w-full max-w-full"
                 style={
                   cardHeight
@@ -268,15 +308,12 @@ export default function AddMeal({ userId }: AddMealProps) {
                     : undefined
                 }
               >
-                <BarcodeScanner
-                  width={isPortraitCamera ? 300 : 400}
-                  height={isPortraitCamera ? 400 : 300}
-                  onUpdate={(_err, result) => {
-                    if (result) {
-                      setBarcode(result.getText());
-                      handleScan();
-                    } else setBarcode("Not Found");
-                  }}
+                <video
+                  ref={scannerVideoRef}
+                  className="h-full w-full rounded-md object-cover"
+                  autoPlay
+                  muted
+                  playsInline
                 />
               </div>
             </CardContent>
