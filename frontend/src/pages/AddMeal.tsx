@@ -114,7 +114,9 @@ export default function AddMeal({ userId }: AddMealProps) {
   const [loading, setLoading] = useState(false);
   const [servingSizeGrams, setServingSizeGrams] = useState("");
   const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
+  const [isPortraitCamera, setIsPortraitCamera] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
+  const scannerWrapRef = useRef<HTMLDivElement | null>(null);
   const [scannerOpen, setScannerOpen] = useState(true);
 
   // auto-hide success after a short delay
@@ -221,6 +223,25 @@ export default function AddMeal({ userId }: AddMealProps) {
     return () => window.removeEventListener("resize", updateHeight);
   }, []);
 
+  // Detect camera orientation from video metadata and adapt scanner aspect ratio.
+  useEffect(() => {
+    if (!scannerOpen || product) return;
+
+    const interval = window.setInterval(() => {
+      const video = scannerWrapRef.current?.querySelector(
+        "video",
+      ) as HTMLVideoElement | null;
+      if (!video || !video.videoWidth || !video.videoHeight) return;
+
+      const nextIsPortrait = video.videoHeight > video.videoWidth;
+      setIsPortraitCamera((prev) =>
+        prev === nextIsPortrait ? prev : nextIsPortrait,
+      );
+    }, 300);
+
+    return () => window.clearInterval(interval);
+  }, [scannerOpen, product]);
+
   return (
     <main className="flex min-h-svh flex-col items-center gap-6 bg-slate-50 p-8">
       <Card
@@ -236,14 +257,20 @@ export default function AddMeal({ userId }: AddMealProps) {
             <CardContent className="flex flex-col items-center justify-center px-2 py-2">
               <div
                 id="scanner-wrap"
-                className="w-full"
+                ref={scannerWrapRef}
+                className="mx-auto w-full max-w-full"
                 style={
-                  cardHeight ? { height: `${cardHeight - 86}px` } : undefined
+                  cardHeight
+                    ? {
+                        height: `${cardHeight - 86}px`,
+                        aspectRatio: isPortraitCamera ? "3 / 4" : "4 / 3",
+                      }
+                    : undefined
                 }
               >
                 <BarcodeScanner
-                  width={360}
-                  height={360}
+                  width={isPortraitCamera ? 300 : 400}
+                  height={isPortraitCamera ? 400 : 300}
                   onUpdate={(_err, result) => {
                     if (result) {
                       setBarcode(result.getText());
