@@ -110,12 +110,6 @@
   --sidebar-ring: oklch(0.551 0.027 264.364);
 }
 
-#scanner-wrap > * {
-  width: 100% !important;
-  height: auto !important;
-  max-width: 100% !important;
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -131,6 +125,6 @@
 #scanner-wrap > * {
   max-width: 100% !important;
   width: 100% !important;
-  height: auto !important;
+  height: 100% !important;
   display: block;
 }

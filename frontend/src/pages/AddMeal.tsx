@@ -119,6 +119,7 @@ export default function AddMeal({ userId }: AddMealProps) {
   const scannerVideoRef = useRef<HTMLVideoElement | null>(null);
   const lastScannedCodeRef = useRef("");
   const [scannerOpen, setScannerOpen] = useState(true);
+  const scannerAspect = isPortraitCamera ? 3 / 4 : 4 / 3;
 
   // auto-hide success after a short delay
   useEffect(() => {
@@ -303,7 +304,8 @@ export default function AddMeal({ userId }: AddMealProps) {
                   cardHeight
                     ? {
                         height: `${cardHeight - 86}px`,
-                        aspectRatio: isPortraitCamera ? "3 / 4" : "4 / 3",
+                        width: `min(100%, ${(cardHeight - 86) * scannerAspect}px)`,
+                        aspectRatio: `${isPortraitCamera ? "3 / 4" : "4 / 3"}`,
                       }
                     : undefined
                 }
