@@ -159,7 +159,7 @@ export default function AddMeal({ userId }: AddMealProps) {
           method: "GET",
           headers: {
             "User-Agent":
-              "NutritionTracker Web - 1.0.0 - https://yourdomain.com - scan",
+              "NutritionTracker Web - 1.0.0 - https://rafis.us - scan",
             Accept: "application/json",
           },
         },
@@ -194,9 +194,18 @@ export default function AddMeal({ userId }: AddMealProps) {
       nutriments: product.nutriments ?? {},
     };
     try {
+      const csrfRes = await fetch("/api/csrf-token", {
+        credentials: "include",
+      });
+      if (!csrfRes.ok) throw new Error("Unable to fetch CSRF token");
+      const { csrfToken } = await csrfRes.json();
       const response = await fetch("/api/meals", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrfToken,
+        },
         body: JSON.stringify(payload),
       });
       if (!response.ok) {
