@@ -276,12 +276,55 @@ export default function AddMeal({ userId }: AddMealProps) {
         return;
       }
 
+      const tuneActiveTrack = async () => {
+        const stream = video.srcObject as MediaStream | null;
+        const track = stream?.getVideoTracks()[0];
+        if (!track) return;
+
+        try {
+          await track.applyConstraints({
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            frameRate: { ideal: 30, max: 60 },
+          });
+        } catch {
+          // Ignore unsupported generic tuning constraints.
+        }
+
+        const capabilities = track.getCapabilities?.() as
+          | (MediaTrackCapabilities & { focusMode?: string[] })
+          | undefined;
+        const advanced: MediaTrackConstraintSet[] = [];
+
+        if (capabilities?.focusMode?.includes("continuous")) {
+          advanced.push({ focusMode: "continuous" } as MediaTrackConstraintSet);
+        } else if (capabilities?.focusMode?.includes("single-shot")) {
+          advanced.push({ focusMode: "single-shot" } as MediaTrackConstraintSet);
+        }
+
+        if (advanced.length === 0) return;
+
+        try {
+          await track.applyConstraints({ advanced });
+        } catch {
+          // Ignore unsupported focus constraints.
+        }
+      };
+
       const constraintsList: MediaStreamConstraints[] = [
         {
           video: {
             facingMode: { ideal: "environment" },
-            width: { ideal: 1280 },
-            height: { ideal: 720 },
+            width: { ideal: 1920 },
+            height: { ideal: 1080 },
+            frameRate: { ideal: 30, max: 60 },
+          },
+        },
+        {
+          video: {
+            facingMode: { ideal: "environment" },
+            width: { ideal: 1600 },
+            height: { ideal: 1200 },
           },
         },
         { video: { facingMode: "environment" } },
@@ -292,6 +335,7 @@ export default function AddMeal({ userId }: AddMealProps) {
       for (const constraints of constraintsList) {
         try {
           await codeReader.decodeFromConstraints(constraints, video, onDecode);
+          await tuneActiveTrack();
           started = true;
           break;
         } catch (_err) {
