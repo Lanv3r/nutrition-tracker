@@ -5,7 +5,6 @@
 Eatr is a full-stack nutrition tracker for logging meals by scanning barcodes or entering them manually. Users set a daily calorie intake goal, and visualize macronutrient distribution and calorie intake for different time periods with charts. The login page includes a live demo(no registration) with randomly seeded data, so the functionality of the app is immediately explorable.
 
 **Food Log Table**
-
 Browse every food item you’ve logged in one place.
 Quickly sort, edit, or delete entries to keep your data accurate.
 
