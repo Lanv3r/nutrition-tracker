@@ -494,15 +494,6 @@ export default function AddMeal({ userId }: AddMealProps) {
               </div>
             </form>
 
-            {success && (
-              <Alert
-                className={`background-green-50 border-green-500 text-green-700 transition-opacity duration-2000 ${fadeSuccess ? "opacity-0" : "opacity-100"}`}
-              >
-                <CheckCircle2Icon />
-                <AlertTitle>Success! Your changes have been saved</AlertTitle>
-              </Alert>
-            )}
-
             <section className="w-full max-w-3xl rounded-lg border bg-white p-6 shadow-sm">
               <h2 className="text-xl font-semibold">
                 {product.product_name ?? "Unknown product"}
@@ -522,7 +513,14 @@ export default function AddMeal({ userId }: AddMealProps) {
           </CardContent>
         )}
       </Card>
-
+      {success && (
+        <Alert
+          className={`background-green-50 border-green-500 text-green-700 transition-opacity duration-2000 ${fadeSuccess ? "opacity-0" : "opacity-100"}`}
+        >
+          <CheckCircle2Icon />
+          <AlertTitle>Success! Your changes have been saved</AlertTitle>
+        </Alert>
+      )}
       {error && <p className="text-red-600">{error}</p>}
     </main>
   );
