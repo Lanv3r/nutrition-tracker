@@ -29,7 +29,7 @@ Deployed with SSH and nginx.
 ## Future Improvements
 
 - Improve scanner function on phones.
-- Improve data security.
+- Enhance data security.
 - Add more features in user profile.
 
 ## Getting Started
