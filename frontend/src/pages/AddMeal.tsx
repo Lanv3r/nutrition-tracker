@@ -453,14 +453,6 @@ export default function AddMeal({ userId }: AddMealProps) {
         )}
         {product && !error && (
           <CardContent className="flex max-h-[500px] flex-col items-center gap-4 overflow-y-auto">
-            {success && (
-              <Alert
-                className={`background-green-50 border-green-500 text-green-700 transition-opacity duration-2000 ${fadeSuccess ? "opacity-0" : "opacity-100"}`}
-              >
-                <CheckCircle2Icon />
-                <AlertTitle>Success! Your changes have been saved</AlertTitle>
-              </Alert>
-            )}
             <p>Enter Meal Size in g:</p>
             <form
               onSubmit={(e) => {
@@ -501,6 +493,15 @@ export default function AddMeal({ userId }: AddMealProps) {
                 </Button>
               </div>
             </form>
+
+            {success && (
+              <Alert
+                className={`background-green-50 border-green-500 text-green-700 transition-opacity duration-2000 ${fadeSuccess ? "opacity-0" : "opacity-100"}`}
+              >
+                <CheckCircle2Icon />
+                <AlertTitle>Success! Your changes have been saved</AlertTitle>
+              </Alert>
+            )}
 
             <section className="w-full max-w-3xl rounded-lg border bg-white p-6 shadow-sm">
               <h2 className="text-xl font-semibold">
