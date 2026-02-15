@@ -299,7 +299,9 @@ export default function AddMeal({ userId }: AddMealProps) {
         if (capabilities?.focusMode?.includes("continuous")) {
           advanced.push({ focusMode: "continuous" } as MediaTrackConstraintSet);
         } else if (capabilities?.focusMode?.includes("single-shot")) {
-          advanced.push({ focusMode: "single-shot" } as MediaTrackConstraintSet);
+          advanced.push({
+            focusMode: "single-shot",
+          } as MediaTrackConstraintSet);
         }
 
         if (advanced.length === 0) return;
@@ -368,7 +370,7 @@ export default function AddMeal({ userId }: AddMealProps) {
         style={cardHeight ? { height: `${cardHeight}px` } : undefined}
       >
         <CardHeader className="flex items-center justify-center">
-          <CardTitle>Barcode Scanner1</CardTitle>
+          <CardTitle>Barcode Scanner</CardTitle>
         </CardHeader>
         {scannerOpen && !product && (
           <div id="card-wrap" className="flex flex-col items-center">
