@@ -2,45 +2,38 @@
 
 [Try it!](https://rafis.us)
 
-Eatr is a full-stack nutrition tracker for logging meals, calculating macros, and visualizing intake trends with charts. It includes a passwordless demo mode with seeded recent data, so the UI is immediately explorable.
+Eatr is a full-stack nutrition tracker for logging meals by scanning barcodes or entering them manually. Users set a daily calorie intake goal, and visualize macronutrient distribution and calorie intake for different time periods with charts. The login page includes a live demo(no registration) with randomly seeded data, so the functionality of the app is immediately explorable.
 
-📋 Food Log Table
+**Food Log Table**
 Browse every food item you’ve logged in one place.
-Quickly sort, edit, or delete entries to keep your nutrition data accurate and up to date.
+Quickly sort, edit, or delete entries to keep your data accurate.
 
 <img src="frontend/public/images/product_table.png" width="800"/>
 
-📊 Weekly Calorie Progress
-A clear bar chart shows how your daily intake compares to your calorie goals across the week, helping you spot trends and stay consistent.
+**Weekly Calorie Progress**
+A bar chart depicts how your daily intake compares to your calorie goals across the week.
 
 <img src="frontend/public/images/bar_graph.png" width="500"/>
 
-🥧 Macro Distribution
-Interactive pie charts visualize how your calories are split between protein, carbs, and fats, making it easy to balance your diet at a glance.
+**Macro Distribution**
+Pie charts illustrate how your calories are split between protein, carbs, and fats.
 
 <img src="frontend/public/images/pie_charts.png" width="800"/>
 
-
-
-## Features
-
-- Meal logging with serving size and nutrition facts
-- Daily and 7/30 day macro composition charts
-- Calorie goal tracking
-- Editable and deletable meal entries
-- Passwordless demo mode with seeded recent meals
-
 ## Tech Stack
 
-- Frontend: React, TypeScript, Vite, Tailwind, shadcn/ui, Recharts
-- Backend: Flask, SQLite
-- Auth: httpOnly session cookies with CSRF protection
+- Frontend: TypeScript, React, Tailwind, shadcn/ui, Recharts
+- Backend: Python, Flask, SQLite
 
-## Project Structure
+In my app, I'm using a session with a CSRF token. 
+Deployed with SSH and nginx.
 
-- `frontend/` - React app
-- `backend/` - Flask API + SQLite
-- `backend/init_db.py` - one-time DB initializer
+
+## Future Improvements
+
+- Improve scanner function on phones.
+- Improve data security.
+- Add more features in user profile.
 
 ## Getting Started
 
@@ -49,18 +42,16 @@ Interactive pie charts visualize how your calories are split between protein, ca
 Frontend:
 
 ```
-cd frontend
 npm install
 ```
 
-Backend (create a venv first if you prefer):
+Backend:
 
 ```
-cd backend
 pip install -r requirements.txt
 ```
 
-### 2) Initialize databases
+### 2) Initialize databases(First time only)
 
 ```
 python backend/init_db.py
@@ -71,44 +62,12 @@ python backend/init_db.py
 Backend:
 
 ```
-cd backend
 python app.py
 ```
 
 Frontend:
 
 ```
-cd frontend
 npm run dev
 ```
 
-Open the app at `http://localhost:5173`.
-
-## Demo Mode
-
-The login screen includes a "Try the demo" button. It creates/refreshes a demo account, seeds meals with dates inside the last 30 days, and logs you in automatically.
-
-## Notes on Auth / CSRF
-
-- The backend uses session cookies. All authenticated requests must use `credentials: "include"`.
-- Mutating requests (POST/PATCH/DELETE) require `X-CSRFToken` header from `/api/csrf-token`.
-- For local dev over HTTP, `SESSION_COOKIE_SECURE` should be `False`. Use `True` in production over HTTPS.
-
-## Scripts
-
-Frontend:
-
-- `npm run dev` - dev server
-- `npm run build` - production build
-- `npm run lint` - lint
-
-## Future Improvements
-
-- Replace prompt/confirm UI with modal dialogs
-- Add tests and CI
-- Improve data validation and error handling
-- Persist user settings (units, goals)
-
-## License
-
-MIT
