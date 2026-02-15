@@ -16,12 +16,6 @@ app.config.update(
 )
 csrf = CSRFProtect(app)
 
-@app.get("/api/health")
-def api_health():
-    print("Health check OK")
-    return jsonify({"status": "ok"})
-
-
 DEMO_USERNAME = "__demo__"
 DEMO_DISPLAY_NAME = "Demo"
 DEMO_GOAL = 2200
@@ -50,242 +44,8 @@ def get_or_create_demo_user():
     conn.close()
     return user_id
 
-def seed_demo_meals(user_id: int):
-    demo_products = [
-        {
-            "name": "Greek Yogurt",
-            "nutriments": {
-                "energy-kcal_100g": 59,
-                "proteins_100g": 10,
-                "fat_100g": 0.4,
-                "carbohydrates_100g": 3.6,
-            },
-        },
-        {
-            "name": "Chicken Breast",
-            "nutriments": {
-                "energy-kcal_100g": 165,
-                "proteins_100g": 31,
-                "fat_100g": 3.6,
-                "carbohydrates_100g": 0,
-            },
-        },
-        {
-            "name": "Oatmeal",
-            "nutriments": {
-                "energy-kcal_100g": 389,
-                "proteins_100g": 17,
-                "fat_100g": 7,
-                "carbohydrates_100g": 66,
-            },
-        },
-        {
-            "name": "Banana",
-            "nutriments": {
-                "energy-kcal_100g": 89,
-                "proteins_100g": 1.1,
-                "fat_100g": 0.3,
-                "carbohydrates_100g": 23,
-            },
-        },
-        {
-            "name": "Avocado",
-            "nutriments": {
-                "energy-kcal_100g": 160,
-                "proteins_100g": 2,
-                "fat_100g": 14.7,
-                "carbohydrates_100g": 8.5,
-            },
-        },
-        {
-            "name": "Salmon",
-            "nutriments": {
-                "energy-kcal_100g": 208,
-                "proteins_100g": 20,
-                "fat_100g": 13,
-                "carbohydrates_100g": 0,
-            },
-        },
-        {
-            "name": "Brown Rice",
-            "nutriments": {
-                "energy-kcal_100g": 111,
-                "proteins_100g": 2.6,
-                "fat_100g": 0.9,
-                "carbohydrates_100g": 23,
-            },
-        },
-        {
-            "name": "Almonds",
-            "nutriments": {
-                "energy-kcal_100g": 579,
-                "proteins_100g": 21,
-                "fat_100g": 50,
-                "carbohydrates_100g": 22,
-            },
-        },
-        {
-            "name": "Egg Whites",
-            "nutriments": {
-                "energy-kcal_100g": 52,
-                "proteins_100g": 11,
-                "fat_100g": 0.2,
-                "carbohydrates_100g": 0.7
-            }
-        },
-        {
-            "name": "Tuna (Canned in water, drained)",
-            "nutriments": {
-                "energy-kcal_100g": 116,
-                "proteins_100g": 26,
-                "fat_100g": 1,
-                "carbohydrates_100g": 0
-            }
-        },
-        {
-            "name": "Sweet Potato (baked)",
-            "nutriments": {
-                "energy-kcal_100g": 90,
-                "proteins_100g": 2,
-                "fat_100g": 0.1,
-                "carbohydrates_100g": 21
-            }
-        },
-        {
-            "name": "Black Beans (cooked)",
-            "nutriments": {
-                "energy-kcal_100g": 132,
-                "proteins_100g": 8.9,
-                "fat_100g": 0.5,
-                "carbohydrates_100g": 23.7
-            }
-        },
-        {
-            "name": "Tofu (firm)",
-            "nutriments": {
-                "energy-kcal_100g": 144,
-                "proteins_100g": 15.7,
-                "fat_100g": 8.7,
-                "carbohydrates_100g": 2.3
-            }
-        },
-        {
-            "name": "Cottage Cheese (low-fat 1%)",
-            "nutriments": {
-                "energy-kcal_100g": 72,
-                "proteins_100g": 12.4,
-                "fat_100g": 1,
-                "carbohydrates_100g": 3.4
-            }
-        },
-        {
-            "name": "Turkey Breast (skinless, roasted)",
-            "nutriments": {
-                "energy-kcal_100g": 135,
-                "proteins_100g": 29,
-                "fat_100g": 1.6,
-                "carbohydrates_100g": 0
-            }
-        },
-        {
-            "name": "Ground Beef (93% lean, cooked)",
-            "nutriments": {
-                "energy-kcal_100g": 176,
-                "proteins_100g": 26,
-                "fat_100g": 8,
-                "carbohydrates_100g": 0
-            }
-        },
-        {
-            "name": "Cod (baked)",
-            "nutriments": {
-                "energy-kcal_100g": 105,
-                "proteins_100g": 23,
-                "fat_100g": 1,
-                "carbohydrates_100g": 0
-            }
-        },
-        {
-            "name": "Quinoa (cooked)",
-            "nutriments": {
-                "energy-kcal_100g": 120,
-                "proteins_100g": 4.4,
-                "fat_100g": 1.9,
-                "carbohydrates_100g": 21.3
-            }
-        },
-        {
-            "name": "Whole Wheat Bread",
-            "nutriments": {
-                "energy-kcal_100g": 247,
-                "proteins_100g": 13,
-                "fat_100g": 4.2,
-                "carbohydrates_100g": 41
-            }
-        },
-        {
-            "name": "Pasta (cooked)",
-            "nutriments": {
-                "energy-kcal_100g": 158,
-                "proteins_100g": 5.8,
-                "fat_100g": 0.9,
-                "carbohydrates_100g": 31
-            }
-        },
-        {
-            "name": "Peanut Butter (natural)",
-            "nutriments": {
-                "energy-kcal_100g": 588,
-                "proteins_100g": 25,
-                "fat_100g": 50,
-                "carbohydrates_100g": 20
-            }
-        },
-        {
-            "name": "Cheddar Cheese",
-            "nutriments": {
-                "energy-kcal_100g": 403,
-                "proteins_100g": 25,
-                "fat_100g": 33,
-                "carbohydrates_100g": 1.3
-            }
-        },
-    ]
-
-    conn = sqlite3.connect("meals.db")
-    c = conn.cursor()
-    c.execute("DELETE FROM meals WHERE user_id = ?", (user_id,))
-
-    now = datetime.now()
-    for _ in range(100):
-        product = random.choice(demo_products)
-        serving = random.choice([80, 100, 120, 150, 180, 200, 250, 300])
-        days_ago = random.randint(0, 29)
-        hours = random.randint(6, 20)
-        minutes = random.randint(0, 59)
-        created_at = (now - timedelta(days=days_ago)).replace(
-            hour=hours, minute=minutes, second=0, microsecond=0
-        )
-        c.execute(
-            "INSERT INTO meals (user_id, barcode, serving_size_grams, product_name, nutriments, created_at) "
-            "VALUES (?, ?, ?, ?, ?, ?)",
-            (
-                user_id,
-                "demo",
-                serving,
-                product["name"],
-                json.dumps(product["nutriments"]),
-                created_at.strftime("%Y-%m-%d %H:%M:%S"),
-            ),
-        )
-
-    conn.commit()
-    conn.close()
-
-
 @app.get("/api/csrf-token")
 def get_csrf_token():
-    print("csrf token")
     token = generate_csrf()
     resp = jsonify({"csrfToken": token})
     resp.set_cookie("csrf_token", token, httponly=True, samesite="Lax", secure=True)
@@ -293,7 +53,6 @@ def get_csrf_token():
 
 @app.get("/api/me")
 def api_me():
-    print("me")
     user_id = session.get("user_id")
     username = session.get("username")
     if not user_id:
@@ -530,6 +289,241 @@ def api_delete_meals():
     conn.commit()
     conn.close()
     return jsonify({"ok": True})
+
+def seed_demo_meals(user_id: int):
+    demo_products = [
+        {
+            "name": "Greek Yogurt",
+            "nutriments": {
+                "energy-kcal_100g": 59,
+                "proteins_100g": 10,
+                "fat_100g": 0.4,
+                "carbohydrates_100g": 3.6,
+            },
+        },
+        {
+            "name": "Chicken Breast",
+            "nutriments": {
+                "energy-kcal_100g": 165,
+                "proteins_100g": 31,
+                "fat_100g": 3.6,
+                "carbohydrates_100g": 0,
+            },
+        },
+        {
+            "name": "Oatmeal",
+            "nutriments": {
+                "energy-kcal_100g": 389,
+                "proteins_100g": 17,
+                "fat_100g": 7,
+                "carbohydrates_100g": 66,
+            },
+        },
+        {
+            "name": "Banana",
+            "nutriments": {
+                "energy-kcal_100g": 89,
+                "proteins_100g": 1.1,
+                "fat_100g": 0.3,
+                "carbohydrates_100g": 23,
+            },
+        },
+        {
+            "name": "Avocado",
+            "nutriments": {
+                "energy-kcal_100g": 160,
+                "proteins_100g": 2,
+                "fat_100g": 14.7,
+                "carbohydrates_100g": 8.5,
+            },
+        },
+        {
+            "name": "Salmon",
+            "nutriments": {
+                "energy-kcal_100g": 208,
+                "proteins_100g": 20,
+                "fat_100g": 13,
+                "carbohydrates_100g": 0,
+            },
+        },
+        {
+            "name": "Brown Rice",
+            "nutriments": {
+                "energy-kcal_100g": 111,
+                "proteins_100g": 2.6,
+                "fat_100g": 0.9,
+                "carbohydrates_100g": 23,
+            },
+        },
+        {
+            "name": "Almonds",
+            "nutriments": {
+                "energy-kcal_100g": 579,
+                "proteins_100g": 21,
+                "fat_100g": 50,
+                "carbohydrates_100g": 22,
+            },
+        },
+        {
+            "name": "Egg Whites",
+            "nutriments": {
+                "energy-kcal_100g": 52,
+                "proteins_100g": 11,
+                "fat_100g": 0.2,
+                "carbohydrates_100g": 0.7
+            }
+        },
+        {
+            "name": "Tuna (Canned in water, drained)",
+            "nutriments": {
+                "energy-kcal_100g": 116,
+                "proteins_100g": 26,
+                "fat_100g": 1,
+                "carbohydrates_100g": 0
+            }
+        },
+        {
+            "name": "Sweet Potato (baked)",
+            "nutriments": {
+                "energy-kcal_100g": 90,
+                "proteins_100g": 2,
+                "fat_100g": 0.1,
+                "carbohydrates_100g": 21
+            }
+        },
+        {
+            "name": "Black Beans (cooked)",
+            "nutriments": {
+                "energy-kcal_100g": 132,
+                "proteins_100g": 8.9,
+                "fat_100g": 0.5,
+                "carbohydrates_100g": 23.7
+            }
+        },
+        {
+            "name": "Tofu (firm)",
+            "nutriments": {
+                "energy-kcal_100g": 144,
+                "proteins_100g": 15.7,
+                "fat_100g": 8.7,
+                "carbohydrates_100g": 2.3
+            }
+        },
+        {
+            "name": "Cottage Cheese (low-fat 1%)",
+            "nutriments": {
+                "energy-kcal_100g": 72,
+                "proteins_100g": 12.4,
+                "fat_100g": 1,
+                "carbohydrates_100g": 3.4
+            }
+        },
+        {
+            "name": "Turkey Breast (skinless, roasted)",
+            "nutriments": {
+                "energy-kcal_100g": 135,
+                "proteins_100g": 29,
+                "fat_100g": 1.6,
+                "carbohydrates_100g": 0
+            }
+        },
+        {
+            "name": "Ground Beef (93% lean, cooked)",
+            "nutriments": {
+                "energy-kcal_100g": 176,
+                "proteins_100g": 26,
+                "fat_100g": 8,
+                "carbohydrates_100g": 0
+            }
+        },
+        {
+            "name": "Cod (baked)",
+            "nutriments": {
+                "energy-kcal_100g": 105,
+                "proteins_100g": 23,
+                "fat_100g": 1,
+                "carbohydrates_100g": 0
+            }
+        },
+        {
+            "name": "Quinoa (cooked)",
+            "nutriments": {
+                "energy-kcal_100g": 120,
+                "proteins_100g": 4.4,
+                "fat_100g": 1.9,
+                "carbohydrates_100g": 21.3
+            }
+        },
+        {
+            "name": "Whole Wheat Bread",
+            "nutriments": {
+                "energy-kcal_100g": 247,
+                "proteins_100g": 13,
+                "fat_100g": 4.2,
+                "carbohydrates_100g": 41
+            }
+        },
+        {
+            "name": "Pasta (cooked)",
+            "nutriments": {
+                "energy-kcal_100g": 158,
+                "proteins_100g": 5.8,
+                "fat_100g": 0.9,
+                "carbohydrates_100g": 31
+            }
+        },
+        {
+            "name": "Peanut Butter (natural)",
+            "nutriments": {
+                "energy-kcal_100g": 588,
+                "proteins_100g": 25,
+                "fat_100g": 50,
+                "carbohydrates_100g": 20
+            }
+        },
+        {
+            "name": "Cheddar Cheese",
+            "nutriments": {
+                "energy-kcal_100g": 403,
+                "proteins_100g": 25,
+                "fat_100g": 33,
+                "carbohydrates_100g": 1.3
+            }
+        },
+    ]
+
+    conn = sqlite3.connect("meals.db")
+    c = conn.cursor()
+    c.execute("DELETE FROM meals WHERE user_id = ?", (user_id,))
+
+    now = datetime.now()
+    for _ in range(100):
+        product = random.choice(demo_products)
+        serving = random.choice([80, 100, 120, 150, 180, 200, 250, 300])
+        days_ago = random.randint(0, 29)
+        hours = random.randint(6, 20)
+        minutes = random.randint(0, 59)
+        created_at = (now - timedelta(days=days_ago)).replace(
+            hour=hours, minute=minutes, second=0, microsecond=0
+        )
+        c.execute(
+            "INSERT INTO meals (user_id, barcode, serving_size_grams, product_name, nutriments, created_at) "
+            "VALUES (?, ?, ?, ?, ?, ?)",
+            (
+                user_id,
+                "demo",
+                serving,
+                product["name"],
+                json.dumps(product["nutriments"]),
+                created_at.strftime("%Y-%m-%d %H:%M:%S"),
+            ),
+        )
+
+    conn.commit()
+    conn.close()
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True)
