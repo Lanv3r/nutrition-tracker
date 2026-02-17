@@ -23,7 +23,7 @@ Quickly sort, edit, or delete entries to keep your data accurate.
 - Backend: Python, Flask, SQLite
 
 In my app, I'm using a session with a CSRF token. 
-Deployed with SSH and nginx.
+Deployed with systemd, gunicorn, and nginx.
 
 
 ## Future Improvements
