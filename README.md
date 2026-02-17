@@ -29,8 +29,8 @@ Deployed with systemd, gunicorn, and nginx.
 ## Future Improvements
 
 - Improve scanner function on phones.
-- Enhance data security.
-- Add more features in user profile.
+- Switch to Postgres.
+- Add more features to the user profile.
 
 ## Getting Started
 
