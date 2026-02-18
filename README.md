@@ -22,8 +22,9 @@ Quickly sort, edit, or delete entries to keep your data accurate.
 - Frontend: TypeScript, React, Tailwind, shadcn/ui, Recharts
 - Backend: Python, Flask, SQLite
 
+Self-hosted CI/CD pipeline with atomic frontend deploys and user-level systemd backend services.
 In my app, I'm using a session with a CSRF token. 
-Deployed with systemd, gunicorn, and nginx.
+Deployed with gunicorn and nginx.
 
 
 ## Future Improvements
