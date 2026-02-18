@@ -8,6 +8,12 @@ jobs:
   deploy:
     runs-on: self-hosted
     steps:
+      - name: Who am I
+        run: |
+          whoami
+          id
+          command -v systemctl
+          command -v sudo
       - name: Deploy
         run: |
           set -e
