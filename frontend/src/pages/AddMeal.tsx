@@ -379,7 +379,9 @@ export default function AddMeal({ userId }: AddMealProps) {
         style={cardHeight ? { height: `${cardHeight}px` } : undefined}
       >
         <CardHeader className="flex items-center justify-center">
-          <CardTitle>Barcode Scanner</CardTitle>
+          <CardTitle>
+            Barcode Scanner(Currently unavailable on mobile)
+          </CardTitle>
         </CardHeader>
         {scannerOpen && !product && (
           <div id="card-wrap" className="flex flex-col items-center">
