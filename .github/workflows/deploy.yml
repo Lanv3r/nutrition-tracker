@@ -14,6 +14,6 @@ jobs:
           cd /home/anver/nutrition-tracker
           git pull
           /home/anver/nutrition-tracker/backend/.venv/bin/pip install -r /home/anver/nutrition-tracker/backend/requirements.txt
-          /usr/bin/systemctl restart mybackend
-          /usr/bin/systemctl status mybackend --no-pager
+          systemctl restart mybackend
+          systemctl status mybackend --no-pager
 
