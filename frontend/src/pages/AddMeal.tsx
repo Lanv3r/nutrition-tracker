@@ -380,7 +380,7 @@ export default function AddMeal({ userId }: AddMealProps) {
       >
         <CardHeader className="flex items-center justify-center">
           <CardTitle>
-            Barcode Scanner1(Currently unavailable on mobile)
+            Barcode Scanner(Currently unavailable on mobile)
           </CardTitle>
         </CardHeader>
         {scannerOpen && !product && (
