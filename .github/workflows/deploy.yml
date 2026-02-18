@@ -13,6 +13,12 @@ jobs:
           set -euxo pipefail
           cd /home/anver/nutrition-tracker
           git pull
+          
+          #update frontend
+          cd /home/anver/nutrition-tracker/frontend
+          bash ./dist.sh
+          
+          #update backend
           /home/anver/nutrition-tracker/backend/.venv/bin/pip install -r /home/anver/nutrition-tracker/backend/requirements.txt
           export XDG_RUNTIME_DIR="/run/user/$(id -u)"
           export DBUS_SESSION_BUS_ADDRESS="unix:path=${XDG_RUNTIME_DIR}/bus"
