@@ -8,6 +8,14 @@ jobs:
   deploy:
     runs-on: self-hosted
     steps:
+      - name: Cache npm
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.npm
+          key: ${{ runner.os }}-npm-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-npm-
       - name: Deploy
         run: |
           set -euxo pipefail
@@ -15,7 +23,8 @@ jobs:
           git pull
           
           #update frontend
-          cd /home/anver/nutrition-tracker/frontend
+          export NPM_CONFIG_CACHE=/home/anver/.npm
+          cd frontend
           bash ./dist.sh
           
           #update backend
