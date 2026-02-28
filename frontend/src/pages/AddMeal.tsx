@@ -10,7 +10,8 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import { BrowserMultiFormatReader } from "@zxing/library";
+import type { Result } from "@zxing/library";
+import BarcodeScanner from "react-qr-barcode-scanner";
 type NutrimentKey =
   | "energy-kcal_100g"
   | "proteins_100g"
@@ -113,13 +114,8 @@ export default function AddMeal({ userId }: AddMealProps) {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(false);
   const [servingSizeGrams, setServingSizeGrams] = useState("");
-  const [cardHeight, setCardHeight] = useState<number | undefined>(undefined);
-  const [isPortraitCamera, setIsPortraitCamera] = useState(false);
-  const cardRef = useRef<HTMLDivElement | null>(null);
-  const scannerVideoRef = useRef<HTMLVideoElement | null>(null);
   const lastScannedCodeRef = useRef("");
   const [scannerOpen, setScannerOpen] = useState(true);
-  const scannerAspect = isPortraitCamera ? 3 / 4 : 4 / 3;
 
   // auto-hide success after a short delay
   useEffect(() => {
@@ -221,192 +217,83 @@ export default function AddMeal({ userId }: AddMealProps) {
   };
 
   const toggleScanner = () => {
-    setScannerOpen(!scannerOpen);
+    setScannerOpen((prev) => !prev);
     setBarcode("");
     setProduct(null);
+    setError(null);
     lastScannedCodeRef.current = "";
   };
+  const isLiveCameraSupported =
+    typeof window !== "undefined" &&
+    window.isSecureContext &&
+    Boolean(navigator.mediaDevices?.getUserMedia);
 
-  // Calculate card height from current scanner aspect ratio.
-  useEffect(() => {
-    const updateHeight = () => {
-      const width = cardRef.current?.offsetWidth;
-      if (!width) return;
+  const handleScannerUpdate = (
+    _scanError: unknown,
+    result?: Result,
+  ) => {
+    if (!result) return;
 
-      const scannerWidth = width - 18;
-      const scannerHeight = scannerWidth / scannerAspect;
-      const nextCardHeight = scannerHeight + 86;
+    const nextCode = result.getText().trim();
+    if (!nextCode || nextCode === lastScannedCodeRef.current) return;
 
-      // Prevent overflow on short mobile viewports.
-      const viewportCap = window.innerHeight - 48;
-      setCardHeight(Math.min(nextCardHeight, viewportCap));
-    };
+    lastScannedCodeRef.current = nextCode;
+    setError(null);
+    setBarcode(nextCode);
+    void fetchProductForBarcode(nextCode);
+  };
 
-    updateHeight();
-    window.addEventListener("resize", updateHeight);
-    return () => window.removeEventListener("resize", updateHeight);
-  }, [scannerAspect]);
+  const handleScannerError = (scanError: string | DOMException) => {
+    const message =
+      typeof scanError === "string" ? scanError : scanError.message;
 
-  useEffect(() => {
-    if (!scannerOpen || product) return;
+    if (
+      typeof scanError !== "string" &&
+      scanError.name === "NotAllowedError"
+    ) {
+      setError("Camera permission denied. Allow camera access and try again.");
+      return;
+    }
 
-    const video = scannerVideoRef.current;
-    if (!video) return;
-
-    const codeReader = new BrowserMultiFormatReader();
-    let isStopped = false;
-
-    const updateOrientation = () => {
-      if (!video.videoWidth || !video.videoHeight) return;
-
-      const nextIsPortrait = video.videoHeight > video.videoWidth;
-      setIsPortraitCamera((prev) =>
-        prev === nextIsPortrait ? prev : nextIsPortrait,
-      );
-    };
-
-    const onDecode = (result: { getText: () => string } | undefined) => {
-      if (isStopped || !result) return;
-      const nextCode = result.getText().trim();
-      if (!nextCode || nextCode === lastScannedCodeRef.current) return;
-
-      lastScannedCodeRef.current = nextCode;
-      setBarcode(nextCode);
-      void fetchProductForBarcode(nextCode);
-    };
-
-    const startScanner = async () => {
-      if (!window.isSecureContext) {
-        setError("Camera requires HTTPS on mobile browsers.");
-        return;
-      }
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setError("This browser does not support camera access.");
-        return;
-      }
-
-      const tuneActiveTrack = async () => {
-        const stream = video.srcObject as MediaStream | null;
-        const track = stream?.getVideoTracks()[0];
-        if (!track) return;
-
-        try {
-          await track.applyConstraints({
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-            frameRate: { ideal: 30, max: 60 },
-          });
-        } catch {
-          // Ignore unsupported generic tuning constraints.
-        }
-
-        const capabilities = track.getCapabilities?.() as
-          | (MediaTrackCapabilities & { focusMode?: string[] })
-          | undefined;
-        const advanced: MediaTrackConstraintSet[] = [];
-
-        if (capabilities?.focusMode?.includes("continuous")) {
-          advanced.push({ focusMode: "continuous" } as MediaTrackConstraintSet);
-        } else if (capabilities?.focusMode?.includes("single-shot")) {
-          advanced.push({
-            focusMode: "single-shot",
-          } as MediaTrackConstraintSet);
-        }
-
-        if (advanced.length === 0) return;
-
-        try {
-          await track.applyConstraints({ advanced });
-        } catch {
-          // Ignore unsupported focus constraints.
-        }
-      };
-
-      const constraintsList: MediaStreamConstraints[] = [
-        {
-          video: {
-            facingMode: { ideal: "environment" },
-            width: { ideal: 1920 },
-            height: { ideal: 1080 },
-            frameRate: { ideal: 30, max: 60 },
-          },
-        },
-        {
-          video: {
-            facingMode: { ideal: "environment" },
-            width: { ideal: 1600 },
-            height: { ideal: 1200 },
-          },
-        },
-        { video: { facingMode: "environment" } },
-        { video: true },
-      ];
-
-      let started = false;
-      for (const constraints of constraintsList) {
-        try {
-          await codeReader.decodeFromConstraints(constraints, video, onDecode);
-          await tuneActiveTrack();
-          started = true;
-          break;
-        } catch (_err) {
-          // Try the next constraint profile.
-        }
-      }
-
-      if (!started && !isStopped) {
-        setError(
-          "Unable to access camera. Check camera permission in browser settings.",
-        );
-      }
-    };
-
-    video.addEventListener("loadedmetadata", updateOrientation);
-    void startScanner();
-
-    return () => {
-      isStopped = true;
-      video.removeEventListener("loadedmetadata", updateOrientation);
-      codeReader.reset();
-    };
-  }, [scannerOpen, product]);
+    setError(message || "Unable to start camera.");
+  };
 
   return (
     <main className="flex min-h-svh flex-col items-center gap-6 bg-slate-50 p-8">
-      <Card
-        ref={cardRef}
-        className="flex w-full max-w-xl flex-col gap-0 py-2"
-        style={cardHeight ? { height: `${cardHeight}px` } : undefined}
-      >
+      <Card className="flex w-full max-w-xl flex-col gap-0 py-2">
         <CardHeader className="flex items-center justify-center">
-          <CardTitle>
-            Barcode Scanner(currently unavailable on mobile)
-          </CardTitle>
+          <CardTitle>Barcode Scanner</CardTitle>
         </CardHeader>
         {scannerOpen && !product && (
           <div id="card-wrap" className="flex flex-col items-center">
             <CardContent className="flex flex-col items-center justify-center px-2 py-2">
-              <div
-                id="scanner-wrap"
-                className="mx-auto w-full max-w-full"
-                style={
-                  cardHeight
-                    ? {
-                        height: `${cardHeight - 86}px`,
-                        width: `min(100%, ${(cardHeight - 86) * scannerAspect}px)`,
-                        aspectRatio: `${isPortraitCamera ? "3 / 4" : "4 / 3"}`,
-                      }
-                    : undefined
-                }
-              >
-                <video
-                  ref={scannerVideoRef}
-                  className="h-full w-full rounded-md object-cover"
-                  autoPlay
-                  muted
-                  playsInline
-                />
-              </div>
+              {!isLiveCameraSupported ? (
+                <p className="text-center text-sm text-red-600">
+                  Live camera scanning requires HTTPS (or localhost in
+                  development). Switch to manual entry below.
+                </p>
+              ) : (
+                <div
+                  id="scanner-wrap"
+                  className="mx-auto w-full max-w-full overflow-hidden rounded-md border"
+                  style={{ aspectRatio: "4 / 3", maxHeight: "65svh" }}
+                >
+                  <BarcodeScanner
+                    width="100%"
+                    height="100%"
+                    facingMode="environment"
+                    delay={200}
+                    stopStream={!scannerOpen || Boolean(product)}
+                    videoConstraints={{
+                      facingMode: { ideal: "environment" },
+                      width: { ideal: 1280 },
+                      height: { ideal: 720 },
+                    }}
+                    onUpdate={handleScannerUpdate}
+                    onError={handleScannerError}
+                  />
+                </div>
+              )}
             </CardContent>
             <CardFooter>
               <Button variant="outline" onClick={() => toggleScanner()}>
@@ -417,12 +304,7 @@ export default function AddMeal({ userId }: AddMealProps) {
         )}
         {!scannerOpen && !product && (
           <div id="card-wrap" className="flex flex-col items-center">
-            <CardContent
-              className="flex flex-col items-center justify-center px-2 py-2"
-              style={
-                cardHeight ? { height: `${cardHeight - 70}px` } : undefined
-              }
-            >
+            <CardContent className="flex flex-col items-center justify-center px-2 py-2">
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
