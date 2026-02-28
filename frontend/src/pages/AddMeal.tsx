@@ -10,8 +10,12 @@ import {
   CardTitle,
   CardFooter,
 } from "@/components/ui/card";
-import type { Result } from "@zxing/library";
-import BarcodeScanner from "react-qr-barcode-scanner";
+import "react-barcode-scanner/polyfill";
+import {
+  BarcodeFormat as DetectorBarcodeFormat,
+  BarcodeScanner as LiveBarcodeScanner,
+  type DetectedBarcode,
+} from "react-barcode-scanner";
 type NutrimentKey =
   | "energy-kcal_100g"
   | "proteins_100g"
@@ -117,6 +121,14 @@ export default function AddMeal({ userId }: AddMealProps) {
   const lastScannedCodeRef = useRef("");
   const [scannerOpen, setScannerOpen] = useState(true);
 
+  const normalizeBarcodeDigits = (value: string) => {
+    const candidateGroups = value.match(/\d{8,14}/g);
+    if (candidateGroups && candidateGroups.length > 0) {
+      return candidateGroups[0];
+    }
+    return value.replace(/\D+/g, "");
+  };
+
   // auto-hide success after a short delay
   useEffect(() => {
     if (!success) return;
@@ -142,9 +154,9 @@ export default function AddMeal({ userId }: AddMealProps) {
       return;
     }
 
-    const normalized_barcode = rawBarcode.replace(/\s+/g, "");
-    if (/^\d+$/.test(normalized_barcode) === false) {
-      setError("Barcode must contain only digits.");
+    const normalized_barcode = normalizeBarcodeDigits(rawBarcode);
+    if (!normalized_barcode || normalized_barcode.length < 8) {
+      setError("Barcode must contain at least 8 digits.");
       setLoading(false);
       return;
     }
@@ -181,7 +193,7 @@ export default function AddMeal({ userId }: AddMealProps) {
 
   const addMeal = async () => {
     if (!product) return;
-    const normalized_barcode = barcode.replace(/\s+/g, "");
+    const normalized_barcode = normalizeBarcodeDigits(barcode);
     const payload = {
       userId: userId,
       barcode: normalized_barcode,
@@ -226,36 +238,22 @@ export default function AddMeal({ userId }: AddMealProps) {
   const isLiveCameraSupported =
     typeof window !== "undefined" &&
     window.isSecureContext &&
-    Boolean(navigator.mediaDevices?.getUserMedia);
+    Boolean(navigator.mediaDevices?.getUserMedia) &&
+    typeof (window as Window & { BarcodeDetector?: unknown }).BarcodeDetector !==
+      "undefined";
 
-  const handleScannerUpdate = (
-    _scanError: unknown,
-    result?: Result,
-  ) => {
-    if (!result) return;
+  const handleScannerCapture = (detected: DetectedBarcode[]) => {
+    if (!detected.length || loading || Boolean(product)) return;
 
-    const nextCode = result.getText().trim();
+    const nextCode = detected
+      .map((barcode) => normalizeBarcodeDigits(barcode.rawValue ?? ""))
+      .find((candidate) => candidate.length >= 8);
     if (!nextCode || nextCode === lastScannedCodeRef.current) return;
 
     lastScannedCodeRef.current = nextCode;
     setError(null);
     setBarcode(nextCode);
     void fetchProductForBarcode(nextCode);
-  };
-
-  const handleScannerError = (scanError: string | DOMException) => {
-    const message =
-      typeof scanError === "string" ? scanError : scanError.message;
-
-    if (
-      typeof scanError !== "string" &&
-      scanError.name === "NotAllowedError"
-    ) {
-      setError("Camera permission denied. Allow camera access and try again.");
-      return;
-    }
-
-    setError(message || "Unable to start camera.");
   };
 
   return (
@@ -278,19 +276,26 @@ export default function AddMeal({ userId }: AddMealProps) {
                   className="mx-auto w-full max-w-full overflow-hidden rounded-md border"
                   style={{ aspectRatio: "4 / 3", maxHeight: "65svh" }}
                 >
-                  <BarcodeScanner
-                    width="100%"
-                    height="100%"
-                    facingMode="environment"
-                    delay={200}
-                    stopStream={!scannerOpen || Boolean(product)}
-                    videoConstraints={{
+                  <LiveBarcodeScanner
+                    options={{
+                      delay: 250,
+                      formats: [
+                        DetectorBarcodeFormat.EAN_13,
+                        DetectorBarcodeFormat.EAN_8,
+                        DetectorBarcodeFormat.UPC_A,
+                        DetectorBarcodeFormat.UPC_E,
+                        DetectorBarcodeFormat.ITF,
+                        DetectorBarcodeFormat.CODE_128,
+                        DetectorBarcodeFormat.CODE_39,
+                      ],
+                    }}
+                    paused={!scannerOpen || Boolean(product)}
+                    trackConstraints={{
                       facingMode: { ideal: "environment" },
                       width: { ideal: 1280 },
                       height: { ideal: 720 },
                     }}
-                    onUpdate={handleScannerUpdate}
-                    onError={handleScannerError}
+                    onCapture={handleScannerCapture}
                   />
                 </div>
               )}
